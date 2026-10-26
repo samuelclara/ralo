@@ -1,0 +1,27 @@
+# Signing: your Apple team and bundle ID stay on your Mac
+Config/Signing.local.xcconfig
+*.mobileprovision
+*.provisionprofile
+*.p12
+*.cer
+*.certSigningRequest
+ExportOptions.plist
+
+# Secrets
+.env
+.env.*
+*.pem
+*.key
+
+# Xcode per-user state and build output
+xcuserdata/
+*.xcuserstate
+DerivedData/
+build/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# macOS and archives
+.DS_Store
+*.zip

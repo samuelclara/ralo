@@ -1,0 +1,5 @@
+// Copy to Signing.local.xcconfig (git-ignored) and fill in.
+// Your Team ID is in Xcode → Settings → Accounts, or at developer.apple.com/account → Membership.
+
+DEVELOPMENT_TEAM = ABCDE12345
+// PRODUCT_BUNDLE_IDENTIFIER = com.yourname.ralo

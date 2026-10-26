@@ -1,0 +1,10 @@
+// Signing settings for building Ralo on your own device.
+//
+// Don't set your team in Xcode's Signing & Capabilities tab: Xcode would write it into the
+// project file, which is committed. Put it in Signing.local.xcconfig next to this file instead
+// (git-ignored). Copy Signing.local.xcconfig.example to get started.
+
+DEVELOPMENT_TEAM =
+PRODUCT_BUNDLE_IDENTIFIER = io.belleville.watchpost
+
+#include? "Signing.local.xcconfig"

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'">
+<title>Talk</title>
+</head>
+<body>
+<script>
+"use strict";
+// Two-way talk for Ralo. Runs in an isolated, non-persistent web view with no network
+// access of its own: only WebRTC media flows, to the ICE servers Arlo hands out.
+let pc = null;
+let stream = null;
+let pending = [];
+
+function post(message) {
+  window.webkit.messageHandlers.talk.postMessage(message);
+}
+
+async function startTalk(iceServers) {
+  stream = await navigator.mediaDevices.getUserMedia({
+    audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+    video: false
+  });
+  pc = new RTCPeerConnection({ iceServers: iceServers, bundlePolicy: "max-bundle" });
+  pc.onicecandidate = (event) => {
+    if (event.candidate && event.candidate.candidate) {
+      post({ type: "candidate", candidate: event.candidate.candidate });
+    }
+  };
+  pc.onconnectionstatechange = () => post({ type: "state", state: pc.connectionState });
+  for (const track of stream.getAudioTracks()) {
+    pc.addTrack(track, stream);
+  }
+  const offer = await pc.createOffer({ offerToReceiveAudio: false, offerToReceiveVideo: false });
+  await pc.setLocalDescription(offer);
+  return pc.localDescription.sdp;
+}
+
+async function applyAnswer(sdp) {
+  if (!pc) return;
+  await pc.setRemoteDescription({ type: "answer", sdp: sdp });
+  for (const candidate of pending) {
+    try { await pc.addIceCandidate(candidate); } catch (e) { post({ type: "log", message: String(e) }); }
+  }
+  pending = [];
+}
+
+async function addCandidate(candidate) {
+  const value = { candidate: candidate, sdpMLineIndex: 0 };
+  if (!pc || !pc.remoteDescription) { pending.push(value); return; }
+  try { await pc.addIceCandidate(value); } catch (e) { post({ type: "log", message: String(e) }); }
+}
+
+function setMicEnabled(enabled) {
+  if (!stream) return;
+  for (const track of stream.getAudioTracks()) track.enabled = enabled;
+}
+
+function stopTalk() {
+  if (pc) { pc.close(); pc = null; }
+  if (stream) { for (const track of stream.getTracks()) track.stop(); stream = null; }
+  pending = [];
+}
+</script>
+</body>
+</html>
